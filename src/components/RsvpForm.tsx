@@ -89,6 +89,10 @@ export function RsvpForm({ onSuccess }: RsvpFormProps) {
           <p className="text-xs text-sky-800 mt-1">
             Preencha seus dados para garantir seu lugar na festa!
           </p>
+          <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-100/80 border border-pink-200 text-pink-900 text-[11px] font-bold">
+            <Sparkles className="w-3 h-3 text-pink-500" />
+            <span>Prazo de confirmação: até 20 de Agosto de 2026</span>
+          </div>
         </div>
 
         {/* Error Alert */}

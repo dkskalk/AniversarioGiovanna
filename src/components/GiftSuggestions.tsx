@@ -1,10 +1,21 @@
 import React, { useState } from "react";
 import { Gift, Shirt, Footprints, Heart, Sparkles, Check } from "lucide-react";
 
+interface GiftItem {
+  id: number;
+  category: string;
+  detail: string;
+  icon: React.ElementType;
+  color: string;
+  bgColor: string;
+  borderColor: string;
+  badge?: string;
+}
+
 export function GiftSuggestions() {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
-  const gifts = [
+  const gifts: GiftItem[] = [
     {
       id: 1,
       category: "Brinquedos",
@@ -13,7 +24,6 @@ export function GiftSuggestions() {
       color: "from-pink-400 to-rose-400",
       bgColor: "bg-pink-50",
       borderColor: "border-pink-200",
-      badge: "Inclusivo",
     },
     {
       id: 2,
@@ -23,17 +33,15 @@ export function GiftSuggestions() {
       color: "from-sky-400 to-blue-500",
       bgColor: "bg-sky-50",
       borderColor: "border-sky-200",
-      badge: "Tam. 2 anos",
     },
     {
       id: 3,
-      category: "Sapato",
+      category: "Calçado",
       detail: "Número 20",
       icon: Footprints,
       color: "from-pink-400 to-rose-400",
       bgColor: "bg-pink-50",
       borderColor: "border-pink-200",
-      badge: "Nº 20",
     },
   ];
 
@@ -84,9 +92,11 @@ export function GiftSuggestions() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="text-sm font-bold text-sky-950">{item.category}</h3>
-                      <span className="text-[10px] font-bold text-sky-800 bg-white/80 px-2 py-0.5 rounded-full border border-sky-200">
-                        {item.badge}
-                      </span>
+                      {item.badge && (
+                        <span className="text-[10px] font-bold text-sky-800 bg-white/80 px-2 py-0.5 rounded-full border border-sky-200">
+                          {item.badge}
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-sky-800 mt-0.5">{item.detail}</p>
                   </div>

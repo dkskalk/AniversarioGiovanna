@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Calendar, Clock, MapPin, ExternalLink, CalendarPlus, Sparkles } from "lucide-react";
 
 export function EventDetails() {
-  const eventDate = "13/10/2026";
+  const eventDate = "13/09/2026";
   const eventTime = "14:00";
   const eventAddress = "Rua Teixeira de Azevedo, nº 69 - Abolição, Rio de Janeiro - RJ";
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("Rua Teixeira de Azevedo, 69 - Abolição, Rio de Janeiro - RJ")}`;
@@ -16,8 +16,8 @@ export function EventDetails() {
   });
 
   useEffect(() => {
-    // Event Date: October 13, 2026 at 14:00
-    const targetTime = new Date(2026, 9, 13, 14, 0, 0).getTime();
+    // Event Date: September 13, 2026 at 14:00 (Month 8 in JS zero-indexed months)
+    const targetTime = new Date(2026, 8, 13, 14, 0, 0).getTime();
 
     const updateTimer = () => {
       const now = new Date().getTime();
@@ -44,8 +44,8 @@ export function EventDetails() {
     const title = encodeURIComponent("1º Aninho da Giovanna - Cinderela Baby");
     const details = encodeURIComponent("Venha comemorar o 1º aninho da Giovanna conosco!");
     const location = encodeURIComponent(eventAddress);
-    // Start: 20261013T140000Z / End: 20261013T190000Z (UTC rough estimate for 14:00 BRT)
-    const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=20261013T170000Z/20261013T220000Z&details=${details}&location=${location}`;
+    // Start: 20260913T170000Z / End: 20260913T220000Z (UTC estimate for 14:00 BRT)
+    const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=20260913T170000Z/20260913T220000Z&details=${details}&location=${location}`;
     window.open(googleCalendarUrl, "_blank", "noopener,noreferrer");
   };
 
@@ -63,6 +63,14 @@ export function EventDetails() {
           </span>
         </div>
 
+        {/* RSVP Deadline Notice Banner */}
+        <div className="mb-4 p-3 rounded-2xl bg-amber-50/90 border border-amber-200/90 text-amber-950 text-xs flex items-center gap-2.5 shadow-sm">
+          <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+          <p className="leading-tight">
+            <strong className="font-bold text-amber-900">Prazo de Confirmação:</strong> Favor confirmar sua presença até <span className="underline decoration-amber-400 font-extrabold text-amber-950">20 de Agosto de 2026</span>.
+          </p>
+        </div>
+
         {/* Details Grid */}
         <div className="space-y-4">
           {/* Data */}
@@ -72,8 +80,8 @@ export function EventDetails() {
             </div>
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-sky-700">Data</span>
-              <p className="text-base font-bold text-sky-950">13 de Outubro de 2026</p>
-              <p className="text-xs text-sky-800">Terça-feira</p>
+              <p className="text-base font-bold text-sky-950">13 de Setembro de 2026</p>
+              <p className="text-xs text-sky-800">Domingo</p>
             </div>
           </div>
 
