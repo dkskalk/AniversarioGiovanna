@@ -1,0 +1,6 @@
+{
+  "name": "Giovanna - 1º Aninho Cinderela Baby",
+  "description": "Site para confirmação de presença do aniversário de 1 ano da Giovanna, com o tema Cinderela Baby.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
