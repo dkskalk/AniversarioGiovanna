@@ -5,13 +5,11 @@ import { EventDetails } from "./components/EventDetails";
 import { RsvpForm } from "./components/RsvpForm";
 import { GiftSuggestions } from "./components/GiftSuggestions";
 import { SuccessModal } from "./components/SuccessModal";
-import { AdminPanelModal } from "./components/AdminPanelModal";
 import { RsvpRecord } from "./types";
 import { Crown, Sparkles } from "lucide-react";
 
 export default function App() {
   const [submittedRecord, setSubmittedRecord] = useState<RsvpRecord | null>(null);
-  const [showAdminModal, setShowAdminModal] = useState(false);
 
   return (
     <div className="min-h-screen relative font-sans text-slate-800 antialiased selection:bg-sky-200 selection:text-sky-900 pb-16">
@@ -40,7 +38,7 @@ export default function App() {
         {/* 4. Gift Suggestions Section */}
         <GiftSuggestions />
 
-        {/* Footer with Painel Button exclusively at the end */}
+        {/* Footer */}
         <footer className="w-full px-4 py-8 text-center text-xs text-sky-900/80 space-y-2 mt-4">
           <div className="flex items-center justify-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
@@ -50,29 +48,14 @@ export default function App() {
           <p className="text-[11px]">
             Esperamos por você para celebrar este momento mágico! ✨
           </p>
-          <div className="pt-2">
-            <button
-              onClick={() => setShowAdminModal(true)}
-              type="button"
-              className="text-[11px] text-sky-800 underline hover:text-sky-950 transition-colors cursor-pointer"
-            >
-              Painel de Totais de Presença (Organização)
-            </button>
-          </div>
         </footer>
       </main>
 
-      {/* Modals */}
+      {/* Celebration Success Modal */}
       {submittedRecord && (
         <SuccessModal
           record={submittedRecord}
           onClose={() => setSubmittedRecord(null)}
-        />
-      )}
-
-      {showAdminModal && (
-        <AdminPanelModal
-          onClose={() => setShowAdminModal(false)}
         />
       )}
     </div>
