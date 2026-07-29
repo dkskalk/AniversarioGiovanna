@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Users, UserCheck, UserX, RefreshCw, X, ShieldCheck, HeartHandshake, Lock } from "lucide-react";
+import { Users, UserCheck, RefreshCw, X, ShieldCheck, HeartHandshake } from "lucide-react";
 import { RsvpStats } from "../types";
 
 interface AdminPanelModalProps {
@@ -94,62 +94,44 @@ export function AdminPanelModal({ onClose }: AdminPanelModalProps) {
           </p>
         </div>
 
-        {/* Grid Stats */}
-        <div className="grid grid-cols-2 gap-3 mb-5">
+        {/* Grid Stats (3 Columns) */}
+        <div className="grid grid-cols-3 gap-2.5 mb-5">
           {/* Confirmados */}
-          <div className="p-3.5 bg-emerald-50 border border-emerald-200/80 rounded-2xl text-center shadow-sm">
+          <div className="p-3 bg-emerald-50 border border-emerald-200/80 rounded-2xl text-center shadow-sm">
             <div className="flex items-center justify-center gap-1 text-emerald-700 mb-1">
-              <UserCheck className="w-4 h-4" />
-              <span className="text-xs font-bold uppercase tracking-wider">Confirmados</span>
+              <UserCheck className="w-3.5 h-3.5" />
+              <span className="text-[11px] font-bold uppercase tracking-wider">Titulares</span>
             </div>
-            <span className="text-2xl font-black text-emerald-950">{stats.confirmados}</span>
-            <span className="text-[11px] text-emerald-800 block mt-0.5 font-medium">Respostas "Sim"</span>
+            <span className="text-xl font-black text-emerald-950">{stats.confirmados}</span>
+            <span className="text-[10px] text-emerald-800 block mt-0.5 font-medium">Confirmados</span>
           </div>
 
           {/* Acompanhantes */}
-          <div className="p-3.5 bg-sky-50 border border-sky-200/80 rounded-2xl text-center shadow-sm">
+          <div className="p-3 bg-sky-50 border border-sky-200/80 rounded-2xl text-center shadow-sm">
             <div className="flex items-center justify-center gap-1 text-sky-700 mb-1">
-              <Users className="w-4 h-4" />
-              <span className="text-xs font-bold uppercase tracking-wider">Acompanhantes</span>
+              <Users className="w-3.5 h-3.5" />
+              <span className="text-[11px] font-bold uppercase tracking-wider">Acompanh.</span>
             </div>
-            <span className="text-2xl font-black text-sky-950">{stats.totalAcompanhantes}</span>
-            <span className="text-[11px] text-sky-800 block mt-0.5 font-medium">Pessoas extras</span>
-          </div>
-
-          {/* Recusados */}
-          <div className="p-3.5 bg-rose-50 border border-rose-200/80 rounded-2xl text-center shadow-sm">
-            <div className="flex items-center justify-center gap-1 text-rose-700 mb-1">
-              <UserX className="w-4 h-4" />
-              <span className="text-xs font-bold uppercase tracking-wider">Não Irão</span>
-            </div>
-            <span className="text-2xl font-black text-rose-950">{stats.recusados}</span>
-            <span className="text-[11px] text-rose-800 block mt-0.5 font-medium">Respostas "Não"</span>
+            <span className="text-xl font-black text-sky-950">{stats.totalAcompanhantes}</span>
+            <span className="text-[10px] text-sky-800 block mt-0.5 font-medium">Acompanhantes</span>
           </div>
 
           {/* Total Respostas */}
-          <div className="p-3.5 bg-amber-50 border border-amber-200/80 rounded-2xl text-center shadow-sm">
+          <div className="p-3 bg-amber-50 border border-amber-200/80 rounded-2xl text-center shadow-sm">
             <div className="flex items-center justify-center gap-1 text-amber-700 mb-1">
-              <HeartHandshake className="w-4 h-4" />
-              <span className="text-xs font-bold uppercase tracking-wider">Total Respostas</span>
+              <HeartHandshake className="w-3.5 h-3.5" />
+              <span className="text-[11px] font-bold uppercase tracking-wider">Respostas</span>
             </div>
-            <span className="text-2xl font-black text-amber-950">{stats.totalRespostas}</span>
-            <span className="text-[11px] text-amber-800 block mt-0.5 font-medium">Envios de formulário</span>
+            <span className="text-xl font-black text-amber-950">{stats.totalRespostas}</span>
+            <span className="text-[10px] text-amber-800 block mt-0.5 font-medium">Formulários</span>
           </div>
-        </div>
-
-        {/* Privacy & Security Lock Notice */}
-        <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 text-xs flex items-start gap-2.5">
-          <Lock className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
-          <p className="leading-snug">
-            <strong className="font-bold text-slate-900">Privacidade Garantida:</strong> Os dados de contato e nomes dos convidados são transmitidos com segurança e armazenados exclusivamente na Planilha Privada do Google da organização.
-          </p>
         </div>
 
         {/* Close Button */}
         <button
           onClick={onClose}
           type="button"
-          className="mt-5 w-full py-3 px-4 rounded-2xl bg-sky-900 hover:bg-sky-950 text-white font-bold text-xs shadow-md transition-all active:scale-98 cursor-pointer"
+          className="w-full py-3 px-4 rounded-2xl bg-sky-900 hover:bg-sky-950 text-white font-bold text-xs shadow-md transition-all active:scale-98 cursor-pointer"
         >
           Fechar Painel
         </button>
