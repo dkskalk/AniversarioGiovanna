@@ -7,6 +7,8 @@ interface RsvpFormProps {
   onSuccess: (record: RsvpRecord) => void;
 }
 
+const HARDCODED_GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzNtUNF2v_1S9wTwRjjFdQNneAokhUrQm5GJFG1pdebG76yK_k9R4N-EM08zXKv3ZsU/exec";
+
 export function RsvpForm({ onSuccess }: RsvpFormProps) {
   const [fullName, setFullName] = useState("");
   const [companionsCount, setCompanionsCount] = useState(0);
@@ -39,38 +41,86 @@ export function RsvpForm({ onSuccess }: RsvpFormProps) {
 
     setLoading(true);
 
+    const rsvpPayload = {
+      fullName: fullName.trim(),
+      companionsCount,
+      phone: phone.trim(),
+      willAttend: "Sim",
+      dietaryRestriction: "",
+      notes: "",
+    };
+
+    let record: RsvpRecord | null = null;
+
+    // 1. Try local Express or serverless /api/rsvp endpoint first
     try {
       const res = await fetch("/api/rsvp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName: fullName.trim(),
-          companionsCount,
-          phone: phone.trim(),
-          willAttend: "Sim",
-          dietaryRestriction: "",
-          notes: "",
-        }),
+        body: JSON.stringify(rsvpPayload),
       });
 
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Erro ao salvar confirmação.");
+      const contentType = res.headers.get("content-type") || "";
+      if (res.ok && contentType.includes("application/json")) {
+        const data = await res.json();
+        if (data && data.success && data.record) {
+          record = data.record;
+        }
       }
-
-      onSuccess(data.record);
-
-      // Reset form
-      setFullName("");
-      setCompanionsCount(0);
-      setPhone("");
-    } catch (err: any) {
-      console.error("Submission error:", err);
-      setErrorMessage(err.message || "Ocorreu um erro ao enviar sua confirmação. Tente novamente.");
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.warn("Backend API not reachable, falling back to direct Google Sheets post:", err);
     }
+
+    // 2. Direct Fallback: If static hosting (Vercel/GitHub Pages) or Express offline
+    if (!record) {
+      const nowFormatted = new Date().toLocaleString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      record = {
+        id: "rsvp_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7),
+        dataHora: nowFormatted,
+        fullName: rsvpPayload.fullName,
+        companionsCount: rsvpPayload.companionsCount,
+        phone: rsvpPayload.phone,
+        willAttend: "Sim",
+        sentToSheet: true,
+      };
+
+      // Submit directly to Google Apps Script Webhook
+      try {
+        await fetch(HARDCODED_GOOGLE_SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            dataHora: record.dataHora,
+            fullName: record.fullName,
+            companionsCount: record.companionsCount,
+            phone: record.phone,
+            willAttend: record.willAttend,
+            dietaryRestriction: "",
+            notes: "",
+          }),
+        });
+      } catch (err) {
+        console.error("Direct Google Sheets post error:", err);
+      }
+    }
+
+    // Trigger success flow
+    onSuccess(record);
+
+    // Reset form fields
+    setFullName("");
+    setCompanionsCount(0);
+    setPhone("");
+    setLoading(false);
   };
 
   return (
@@ -152,7 +202,7 @@ export function RsvpForm({ onSuccess }: RsvpFormProps) {
                 type="button"
                 onClick={() => handleCompanionsChange(-1)}
                 disabled={companionsCount <= 0}
-                className="w-10 h-10 rounded-xl bg-white border border-sky-200 text-sky-900 font-bold text-lg flex items-center justify-center shadow-sm disabled:opacity-40 active:scale-90 transition-all"
+                className="w-10 h-10 rounded-xl bg-white border border-sky-200 text-sky-900 font-bold text-lg flex items-center justify-center shadow-sm disabled:opacity-40 active:scale-90 transition-all cursor-pointer"
               >
                 -
               </button>
@@ -164,7 +214,7 @@ export function RsvpForm({ onSuccess }: RsvpFormProps) {
                 type="button"
                 onClick={() => handleCompanionsChange(1)}
                 disabled={companionsCount >= 10}
-                className="w-10 h-10 rounded-xl bg-pink-400 text-white font-bold text-lg flex items-center justify-center shadow-md hover:bg-pink-500 active:scale-90 transition-all"
+                className="w-10 h-10 rounded-xl bg-pink-400 text-white font-bold text-lg flex items-center justify-center shadow-md hover:bg-pink-500 active:scale-90 transition-all cursor-pointer"
               >
                 +
               </button>

@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/rsvp",
+      "destination": "/api/rsvp"
+    },
+    {
+      "source": "/api/rsvps",
+      "destination": "/api/rsvps"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
