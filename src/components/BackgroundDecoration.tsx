@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Volume2, VolumeX, Play, Pause, Music, Sparkles } from "lucide-react";
+import { Volume2, VolumeX, Play, Music, Sparkles } from "lucide-react";
 
 export function BackgroundDecoration() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -7,7 +7,7 @@ export function BackgroundDecoration() {
 
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = 0.45; // 45% volume (audible and clear)
+      audioRef.current.volume = 0.25; // Exactly 25% volume
     }
   }, []);
 
@@ -18,6 +18,7 @@ export function BackgroundDecoration() {
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
+      audioRef.current.volume = 0.25; // 25% volume
       audioRef.current
         .play()
         .then(() => {
@@ -33,6 +34,7 @@ export function BackgroundDecoration() {
     // Attempt playback on first user touch/click anywhere on page
     const handleUserInteraction = () => {
       if (audioRef.current && audioRef.current.paused) {
+        audioRef.current.volume = 0.25;
         audioRef.current
           .play()
           .then(() => {
