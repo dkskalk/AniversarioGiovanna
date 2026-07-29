@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Users, UserCheck, UserX, Search, Download, Trash2, RefreshCw, X, FileSpreadsheet, Settings, Shield, Check } from "lucide-react";
-import { RsvpRecord, RsvpStats } from "../types";
+import { Users, UserCheck, UserX, RefreshCw, X, ShieldCheck, HeartHandshake, Lock } from "lucide-react";
+import { RsvpStats } from "../types";
 
 interface AdminPanelModalProps {
   onClose: () => void;
-  onOpenSheetsGuide: () => void;
 }
 
-export function AdminPanelModal({ onClose, onOpenSheetsGuide }: AdminPanelModalProps) {
-  const [rsvps, setRsvps] = useState<RsvpRecord[]>([]);
+export function AdminPanelModal({ onClose }: AdminPanelModalProps) {
   const [stats, setStats] = useState<RsvpStats>({
     totalRespostas: 0,
     confirmados: 0,
@@ -17,15 +15,12 @@ export function AdminPanelModal({ onClose, onOpenSheetsGuide }: AdminPanelModalP
     totalPessoasConfirmadas: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterTab, setFilterTab] = useState<"Todos" | "Sim" | "Não">("Todos");
 
-  const fetchRsvps = async () => {
+  const fetchStats = async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/rsvps");
       const data = await res.json();
-      setRsvps(data.rsvps || []);
       setStats(
         data.stats || {
           totalRespostas: 0,
@@ -36,241 +31,128 @@ export function AdminPanelModal({ onClose, onOpenSheetsGuide }: AdminPanelModalP
         }
       );
     } catch (err) {
-      console.error("Error loading RSVPs:", err);
+      console.error("Error loading stats:", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchRsvps();
+    fetchStats();
   }, []);
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Deseja realmente remover esta resposta da lista?")) return;
-    try {
-      await fetch(`/api/rsvps/${id}`, { method: "DELETE" });
-      fetchRsvps();
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleExportCSV = () => {
-    if (rsvps.length === 0) {
-      alert("Nenhum convidado para exportar.");
-      return;
-    }
-
-    const headers = ["Data e Hora", "Nome Completo", "Confirmou Presenca", "Acompanhantes", "Telefone", "Restricao Alimentar", "Observacoes"];
-    const rows = rsvps.map((r) => [
-      `"${r.dataHora}"`,
-      `"${r.fullName}"`,
-      `"${r.willAttend}"`,
-      r.companionsCount,
-      `"${r.phone}"`,
-      `"${r.dietaryRestriction || ""}"`,
-      `"${r.notes || ""}"`,
-    ]);
-
-    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Confirmacoes_Aniversario_Giovanna_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const filteredRsvps = rsvps.filter((r) => {
-    const matchesSearch =
-      r.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.phone.includes(searchQuery);
-    if (filterTab === "Sim") return matchesSearch && r.willAttend === "Sim";
-    if (filterTab === "Não") return matchesSearch && r.willAttend === "Não";
-    return matchesSearch;
-  });
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-sky-950/70 backdrop-blur-md animate-fadeIn overflow-y-auto">
-      <div className="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl border border-sky-200 relative my-6 text-left max-h-[92vh] overflow-y-auto flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-sky-950/70 backdrop-blur-md animate-fadeIn overflow-y-auto">
+      <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-sky-200 relative my-6 text-left overflow-hidden">
+        {/* Decorative Background Accents */}
+        <div className="absolute -top-12 -right-12 w-32 h-32 bg-sky-200/40 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-pink-200/40 rounded-full blur-2xl pointer-events-none" />
+
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-sky-100 pb-3 mb-4 shrink-0">
+        <div className="flex items-center justify-between border-b border-sky-100 pb-3 mb-5">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-sky-100 text-sky-800 flex items-center justify-center font-bold">
-              <Shield className="w-5 h-5 text-sky-600" />
+            <div className="w-10 h-10 rounded-2xl bg-sky-100 text-sky-800 flex items-center justify-center font-bold shadow-inner">
+              <ShieldCheck className="w-5 h-5 text-sky-600" />
             </div>
             <div>
-              <h3 className="text-base font-extrabold text-sky-950 font-serif">Painel do Evento • Lista de Convidados</h3>
-              <p className="text-xs text-sky-800">Gerenciamento de presenças da festa da Giovanna</p>
+              <h3 className="text-base font-extrabold text-sky-950 font-serif">Resumo de Confirmações</h3>
+              <p className="text-xs text-sky-800">1º Aninho da Giovanna • Total Geral</p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <button
-              onClick={fetchRsvps}
+              onClick={fetchStats}
               type="button"
-              className="p-2 text-sky-600 hover:bg-sky-50 rounded-xl transition-all"
-              title="Atualizar lista"
+              className="p-2 text-sky-600 hover:bg-sky-50 rounded-xl transition-all cursor-pointer"
+              title="Atualizar estatísticas"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             </button>
             <button
               onClick={onClose}
               type="button"
-              className="p-2 text-sky-400 hover:text-sky-800 rounded-full hover:bg-sky-50 transition-all"
+              className="p-2 text-sky-400 hover:text-sky-800 rounded-full hover:bg-sky-50 transition-all cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* Stats Metrics Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-5 shrink-0">
-          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-center">
-            <span className="block text-xs font-bold uppercase tracking-wider text-emerald-800">Confirmados</span>
-            <span className="text-xl font-extrabold text-emerald-950">{stats.confirmados}</span>
-            <span className="text-[10px] text-emerald-700 block">Titulares</span>
+        {/* Main Highlight Card - Total Pessoas Confirmadas */}
+        <div className="p-5 rounded-2xl bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-600 text-white text-center shadow-lg mb-5 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+            <Users className="w-24 h-24 text-white" />
           </div>
-
-          <div className="p-3 bg-sky-50 border border-sky-200 rounded-2xl text-center">
-            <span className="block text-xs font-bold uppercase tracking-wider text-sky-800">Total Pessoas</span>
-            <span className="text-xl font-extrabold text-sky-950">{stats.totalPessoasConfirmadas}</span>
-            <span className="text-[10px] text-sky-700 block">Titulares + {stats.totalAcompanhantes} Acomp.</span>
-          </div>
-
-          <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl text-center">
-            <span className="block text-xs font-bold uppercase tracking-wider text-rose-800">Ausentes</span>
-            <span className="text-xl font-extrabold text-rose-950">{stats.recusados}</span>
-            <span className="text-[10px] text-rose-700 block">Não poderão ir</span>
-          </div>
-
-          <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-center">
-            <span className="block text-xs font-bold uppercase tracking-wider text-amber-800">Total Respostas</span>
-            <span className="text-xl font-extrabold text-amber-950">{stats.totalRespostas}</span>
-            <span className="text-[10px] text-amber-700 block">No sistema</span>
-          </div>
+          <span className="text-xs font-bold uppercase tracking-wider text-sky-100 block mb-1">
+            Total Geral de Pessoas Confirmadas
+          </span>
+          <span className="text-4xl sm:text-5xl font-black font-serif drop-shadow-md">
+            {stats.totalPessoasConfirmadas}
+          </span>
+          <p className="text-xs text-sky-100 mt-1 font-medium">
+            {stats.confirmados} convidado(s) principal(is) + {stats.totalAcompanhantes} acompanhante(s)
+          </p>
         </div>
 
-        {/* Action Toolbar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-4 shrink-0">
-          {/* Tabs */}
-          <div className="flex bg-sky-100/80 p-1 rounded-xl w-full sm:w-auto">
-            {(["Todos", "Sim", "Não"] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setFilterTab(tab)}
-                type="button"
-                className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  filterTab === tab
-                    ? "bg-white text-sky-950 shadow-sm"
-                    : "text-sky-700 hover:text-sky-950"
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-
-          {/* Buttons */}
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <button
-              onClick={onOpenSheetsGuide}
-              type="button"
-              className="flex-1 sm:flex-initial px-3 py-2 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold text-xs flex items-center justify-center gap-1.5 transition-all border border-emerald-300"
-            >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-700" />
-              <span>Google Sheets</span>
-            </button>
-
-            <button
-              onClick={handleExportCSV}
-              type="button"
-              className="flex-1 sm:flex-initial px-3 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm"
-            >
-              <Download className="w-4 h-4" />
-              <span>Baixar CSV</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Search Input */}
-        <div className="relative mb-4 shrink-0">
-          <Search className="w-4 h-4 text-sky-400 absolute left-3.5 top-3" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar por nome do convidado ou telefone..."
-            className="w-full pl-9 pr-4 py-2 rounded-xl bg-sky-50/70 border border-sky-200 text-xs text-sky-950 focus:outline-none focus:ring-2 focus:ring-sky-400"
-          />
-        </div>
-
-        {/* Guest List Table */}
-        <div className="flex-1 overflow-y-auto min-h-[220px] border border-sky-100 rounded-2xl">
-          {loading ? (
-            <div className="p-8 text-center text-xs text-sky-700">Carregando lista de convidados...</div>
-          ) : filteredRsvps.length === 0 ? (
-            <div className="p-8 text-center text-xs text-sky-700">
-              Nenhum convidado encontrado com os filtros selecionados.
+        {/* Grid Stats */}
+        <div className="grid grid-cols-2 gap-3 mb-5">
+          {/* Confirmados */}
+          <div className="p-3.5 bg-emerald-50 border border-emerald-200/80 rounded-2xl text-center shadow-sm">
+            <div className="flex items-center justify-center gap-1 text-emerald-700 mb-1">
+              <UserCheck className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-wider">Confirmados</span>
             </div>
-          ) : (
-            <div className="divide-y divide-sky-100">
-              {filteredRsvps.map((r) => (
-                <div key={r.id} className="p-3 hover:bg-sky-50/60 transition-all flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="font-bold text-sm text-sky-950 truncate">{r.fullName}</span>
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          r.willAttend === "Sim"
-                            ? "bg-emerald-100 text-emerald-800"
-                            : "bg-rose-100 text-rose-800"
-                        }`}
-                      >
-                        {r.willAttend === "Sim" ? "Confirmado" : "Ausente"}
-                      </span>
-                      {r.sentToSheet && (
-                        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200" title="Enviado para o Google Sheets">
-                          Planilha ✓
-                        </span>
-                      )}
-                    </div>
+            <span className="text-2xl font-black text-emerald-950">{stats.confirmados}</span>
+            <span className="text-[11px] text-emerald-800 block mt-0.5 font-medium">Respostas "Sim"</span>
+          </div>
 
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-sky-800">
-                      <span>📞 {r.phone}</span>
-                      {r.willAttend === "Sim" && (
-                        <span>👥 {r.companionsCount} acompanhante(s)</span>
-                      )}
-                      <span className="text-sky-400 text-[10px]">⏱ {r.dataHora}</span>
-                    </div>
-
-                    {r.dietaryRestriction && (
-                      <p className="text-[11px] text-amber-900 bg-amber-50 p-1.5 rounded-lg border border-amber-200 mt-1.5">
-                        ⚠️ <strong>Restrição alimentar:</strong> {r.dietaryRestriction}
-                      </p>
-                    )}
-
-                    {r.notes && (
-                      <p className="text-[11px] text-sky-900 italic mt-1">
-                        💬 "{r.notes}"
-                      </p>
-                    )}
-                  </div>
-
-                  <button
-                    onClick={() => handleDelete(r.id)}
-                    type="button"
-                    className="p-1.5 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
-                    title="Excluir resposta"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
+          {/* Acompanhantes */}
+          <div className="p-3.5 bg-sky-50 border border-sky-200/80 rounded-2xl text-center shadow-sm">
+            <div className="flex items-center justify-center gap-1 text-sky-700 mb-1">
+              <Users className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-wider">Acompanhantes</span>
             </div>
-          )}
+            <span className="text-2xl font-black text-sky-950">{stats.totalAcompanhantes}</span>
+            <span className="text-[11px] text-sky-800 block mt-0.5 font-medium">Pessoas extras</span>
+          </div>
+
+          {/* Recusados */}
+          <div className="p-3.5 bg-rose-50 border border-rose-200/80 rounded-2xl text-center shadow-sm">
+            <div className="flex items-center justify-center gap-1 text-rose-700 mb-1">
+              <UserX className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-wider">Não Irão</span>
+            </div>
+            <span className="text-2xl font-black text-rose-950">{stats.recusados}</span>
+            <span className="text-[11px] text-rose-800 block mt-0.5 font-medium">Respostas "Não"</span>
+          </div>
+
+          {/* Total Respostas */}
+          <div className="p-3.5 bg-amber-50 border border-amber-200/80 rounded-2xl text-center shadow-sm">
+            <div className="flex items-center justify-center gap-1 text-amber-700 mb-1">
+              <HeartHandshake className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-wider">Total Respostas</span>
+            </div>
+            <span className="text-2xl font-black text-amber-950">{stats.totalRespostas}</span>
+            <span className="text-[11px] text-amber-800 block mt-0.5 font-medium">Envios de formulário</span>
+          </div>
         </div>
+
+        {/* Privacy & Security Lock Notice */}
+        <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 text-xs flex items-start gap-2.5">
+          <Lock className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+          <p className="leading-snug">
+            <strong className="font-bold text-slate-900">Privacidade Garantida:</strong> Os dados de contato e nomes dos convidados são transmitidos com segurança e armazenados exclusivamente na Planilha Privada do Google da organização.
+          </p>
+        </div>
+
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          type="button"
+          className="mt-5 w-full py-3 px-4 rounded-2xl bg-sky-900 hover:bg-sky-950 text-white font-bold text-xs shadow-md transition-all active:scale-98 cursor-pointer"
+        >
+          Fechar Painel
+        </button>
       </div>
     </div>
   );

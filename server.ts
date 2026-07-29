@@ -23,6 +23,8 @@ const PORT = 3000;
 const DATA_FILE = path.join(process.cwd(), "rsvps_data.json");
 const CONFIG_FILE = path.join(process.cwd(), "app_config.json");
 
+const HARDCODED_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzNtUNF2v_1S9wTwRjjFdQNneAokhUrQm5GJFG1pdebG76yK_k9R4N-EM08zXKv3ZsU/exec";
+
 // Load stored RSVPs
 let rsvps: RsvpRecord[] = [];
 if (fs.existsSync(DATA_FILE)) {
@@ -35,15 +37,12 @@ if (fs.existsSync(DATA_FILE)) {
   }
 }
 
-// Load config
-let config: AppConfig = { googleScriptUrl: "" };
-if (fs.existsSync(CONFIG_FILE)) {
-  try {
-    const raw = fs.readFileSync(CONFIG_FILE, "utf-8");
-    config = JSON.parse(raw);
-  } catch (err) {
-    console.error("Failed to read app_config.json:", err);
-  }
+// Ensure config has hardcoded URL
+let config: AppConfig = { googleScriptUrl: HARDCODED_SCRIPT_URL };
+try {
+  fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
+} catch (err) {
+  console.error("Failed to save app_config.json:", err);
 }
 
 function saveData() {
@@ -54,20 +53,9 @@ function saveData() {
   }
 }
 
-function saveConfig() {
+async function forwardToGoogleSheets(payload: any) {
   try {
-    fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
-  } catch (err) {
-    console.error("Failed to save app_config.json:", err);
-  }
-}
-
-async function forwardToGoogleSheets(scriptUrl: string, payload: any) {
-  if (!scriptUrl || !scriptUrl.trim().startsWith("http")) {
-    return { success: false, reason: "URL do Google Apps Script não configurada" };
-  }
-  try {
-    const res = await fetch(scriptUrl, {
+    const res = await fetch(HARDCODED_SCRIPT_URL, {
       method: "POST",
       headers: {
         "Content-Type": "text/plain;charset=utf-8",
@@ -88,40 +76,12 @@ async function startServer() {
 
   // API Endpoints
 
-  // Get configuration
+  // Get config status (without exposing full URL)
   app.get("/api/config", (req, res) => {
-    res.json(config);
+    res.json({ configured: true });
   });
 
-  // Save configuration
-  app.post("/api/config", (req, res) => {
-    const { googleScriptUrl } = req.body;
-    config.googleScriptUrl = typeof googleScriptUrl === "string" ? googleScriptUrl.trim() : "";
-    saveConfig();
-    res.json({ success: true, config });
-  });
-
-  // Test webhook connection
-  app.post("/api/test-webhook", async (req, res) => {
-    const { url } = req.body;
-    const targetUrl = url || config.googleScriptUrl;
-    if (!targetUrl) {
-      return res.status(400).json({ error: "Nenhuma URL fornecida" });
-    }
-    const testPayload = {
-      dataHora: new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }),
-      fullName: "Teste de Conexão - Sistema Giovanna",
-      companionsCount: 0,
-      phone: "(21) 99999-9999",
-      willAttend: "Sim",
-      dietaryRestriction: "Nenhuma (Teste)",
-      notes: "Teste de envio de confirmação automático.",
-    };
-    const result = await forwardToGoogleSheets(targetUrl, testPayload);
-    res.json(result);
-  });
-
-  // Get all RSVPs
+  // Get aggregated stats ONLY (Protects guest privacy)
   app.get("/api/rsvps", (req, res) => {
     const totalSim = rsvps.filter((r) => r.willAttend === "Sim");
     const totalNao = rsvps.filter((r) => r.willAttend === "Não");
@@ -129,7 +89,8 @@ async function startServer() {
     const totalPessoasConfirmadas = totalSim.length + totalAcompanhantes;
 
     res.json({
-      rsvps,
+      // Do not return personal contact info to protect guest privacy
+      rsvps: [],
       stats: {
         totalRespostas: rsvps.length,
         confirmados: totalSim.length,
@@ -176,20 +137,19 @@ async function startServer() {
         sentToSheet: false,
       };
 
-      // Try forwarding to Google Sheets if URL exists
-      if (config.googleScriptUrl) {
-        const sheetResult = await forwardToGoogleSheets(config.googleScriptUrl, {
-          dataHora: newRecord.dataHora,
-          fullName: newRecord.fullName,
-          companionsCount: newRecord.companionsCount,
-          phone: newRecord.phone,
-          willAttend: newRecord.willAttend,
-          dietaryRestriction: newRecord.dietaryRestriction || "",
-          notes: newRecord.notes || "",
-        });
-        if (sheetResult.success) {
-          newRecord.sentToSheet = true;
-        }
+      // Forward directly to hardcoded Google Sheets URL
+      const sheetResult = await forwardToGoogleSheets({
+        dataHora: newRecord.dataHora,
+        fullName: newRecord.fullName,
+        companionsCount: newRecord.companionsCount,
+        phone: newRecord.phone,
+        willAttend: newRecord.willAttend,
+        dietaryRestriction: newRecord.dietaryRestriction || "",
+        notes: newRecord.notes || "",
+      });
+
+      if (sheetResult.success) {
+        newRecord.sentToSheet = true;
       }
 
       rsvps.unshift(newRecord);
@@ -204,14 +164,6 @@ async function startServer() {
       console.error("Error saving RSVP:", err);
       return res.status(500).json({ error: "Ocorreu um erro interno ao processar a confirmação." });
     }
-  });
-
-  // Delete an RSVP
-  app.delete("/api/rsvps/:id", (req, res) => {
-    const { id } = req.params;
-    rsvps = rsvps.filter((r) => r.id !== id);
-    saveData();
-    res.json({ success: true });
   });
 
   // Vite or Static handling
