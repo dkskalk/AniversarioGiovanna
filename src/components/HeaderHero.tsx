@@ -12,7 +12,7 @@ export function HeaderHero() {
     if (saved) {
       setPhotoUrl(saved);
     } else {
-      setPhotoUrl("/giovanna.jpg");
+      setPhotoUrl("/FotoGiovanna.jpeg");
     }
   }, []);
 
